@@ -1,33 +1,187 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-display: "Playfair Display", ui-serif, Georgia, serif;
+}
+
 :root {
-  --navy-900: #0a1628;
-  --navy-800: #0f1f3a;
-  --navy-700: #162a4d;
-  --navy-600: #1e3a5f;
-  --gold-500: #c9a227;
-  --gold-400: #d4b43a;
-  --gold-300: #e0c85a;
+  --navy-900: #0a1628; /* Primary background */
+  --navy-800: #0f1f3d; /* Surface */
+  --navy-700: #162444; /* Surface elevated */
+  --navy-600: #1e3358; /* Border */
+  --gold-500: #c9a227; /* Gold primary */
+  --gold-400: #a07d1a; /* Gold muted */
+  --gold-300: #f0c84a; /* Gold text */
+  --text-primary: #f0f4ff;
+  --text-secondary: #8ba0c4;
+  --text-muted: #4d6285;
 }
 
 body {
   background-color: var(--navy-900);
-  color: #ffffff;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
 }
 
+/* Global Component Styles */
 @layer base {
+  /* Inputs & Selects */
   input, select, textarea {
-    background-color: #0f1f3a;
-    border: 1px solid #1e3a5f;
-    color: #ffffff;
-    border-radius: 0.5rem;
-    padding: 0.5rem 1rem;
+    background-color: var(--navy-900);
+    border: 1px solid var(--navy-600);
+    color: var(--text-primary);
+    border-radius: 8px;
+    height: 44px;
+    font-size: 14px;
+    padding: 0 12px;
+    transition: all 0.2s ease;
   }
+  
   input:focus, select:focus, textarea:focus {
     outline: none;
-    --tw-ring-color: #c9a227;
-    box-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
     border-color: transparent;
+    box-shadow: 0 0 0 2px rgba(201, 162, 39, 0.6);
+  }
+  
+  input::placeholder, textarea::placeholder {
+    color: var(--text-muted);
+  }
+
+  /* Typography extensions */
+  h1, h2, h3, h4, h5, h6 {
+    color: var(--text-primary);
+  }
+
+  button {
+    height: 44px;
   }
 }
 
+/* Specific utilities */
+@layer utilities {
+  .font-display { font-family: var(--font-display); }
+  
+  /* Cards */
+  .ksas-card {
+    background-color: var(--navy-800);
+    border: 1px solid var(--navy-600);
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    transition: border-color 200ms ease;
+  }
+  .ksas-card:hover {
+    border-color: rgba(201, 162, 39, 0.4);
+  }
+
+  /* Primary Button */
+  .btn-primary {
+    background-color: var(--gold-500);
+    color: var(--navy-900);
+    font-weight: 600;
+    border-radius: 8px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 1rem;
+    transition: all 0.2s ease;
+  }
+  .btn-primary:hover:not(:disabled) {
+    background-color: var(--gold-400);
+    transform: scale(1.01);
+  }
+  .btn-primary:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+  .btn-primary:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  /* Secondary Button */
+  .btn-secondary {
+    background-color: transparent;
+    border: 1px solid var(--navy-600);
+    color: var(--text-secondary);
+    border-radius: 8px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 1rem;
+    transition: all 0.2s ease;
+  }
+  .btn-secondary:hover:not(:disabled) {
+    border-color: var(--gold-500);
+    color: var(--gold-300);
+  }
+
+  /* Danger Button */
+  .btn-danger {
+    background-color: transparent;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    color: #ef4444;
+    border-radius: 8px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 1rem;
+    transition: all 0.2s ease;
+  }
+  .btn-danger:hover:not(:disabled) {
+    background-color: rgba(239, 68, 68, 0.1);
+  }
+
+  /* Badges */
+  .badge {
+    border-radius: 9999px;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+  }
+  .badge-success { background-color: rgba(34, 197, 94, 0.15); color: #22c55e; }
+  .badge-error { background-color: rgba(239, 68, 68, 0.15); color: #ef4444; }
+  .badge-warning { background-color: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+  .badge-admin { background-color: rgba(201, 162, 39, 0.15); color: var(--gold-500); }
+  .badge-lecturer { background-color: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+  .badge-student { background-color: rgba(139, 160, 196, 0.15); color: var(--text-secondary); }
+
+  /* Table styling components */
+  .ksas-table-container {
+    width: 100%;
+    overflow-x: auto;
+  }
+  .ksas-table {
+    width: 100%;
+    text-align: left;
+    border-collapse: collapse;
+  }
+  .ksas-table thead tr {
+    background-color: var(--navy-700);
+    color: var(--text-secondary);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .ksas-table th {
+    padding: 12px 16px;
+    font-weight: 600;
+  }
+  .ksas-table tbody tr {
+    border-bottom: 1px solid var(--navy-600);
+    transition: background-color 0.2s;
+  }
+  .ksas-table tbody tr:hover {
+    background-color: var(--navy-700);
+  }
+  .ksas-table td {
+    padding: 14px 16px;
+    font-size: 14px;
+    color: var(--text-primary);
+  }
+}

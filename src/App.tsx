@@ -5,6 +5,7 @@
 
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Login from './pages/Login'
+import SignUp from './pages/SignUp'
 import { RoleLayout } from './layouts/RoleLayout'
 
 import AdminDashboard from './pages/admin/Dashboard'
@@ -35,13 +36,14 @@ function HomeRedirect() {
         return
       }
       supabase.from('profiles').select('role').eq('id', user.id).single().then(({ data }) => {
-        setRole(data?.role || 'guest')
+        const typedData = data as any;
+        setRole(typedData?.role || 'guest')
         setLoading(false)
       })
     })
   }, [])
 
-  if (loading) return <div className="min-h-screen bg-[#0a1628] flex items-center justify-center p-8"><div className="w-8 h-8 border-2 border-[#c9a227] border-t-transparent rounded-full animate-spin" /></div>
+  if (loading) return <div className="min-h-screen bg-navy-900 flex items-center justify-center p-8"><div className="w-8 h-8 border-2 border-[#c9a227] border-t-transparent rounded-full animate-spin" /></div>
   
   if (role === 'admin') return <Navigate to="/admin" />
   if (role === 'lecturer') return <Navigate to="/lecturer" />
@@ -56,6 +58,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<HomeRedirect />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/sign-up" element={<SignUp />} />
 
         {/* Admin Routes */}
         <Route element={<RoleLayout role="admin" navItems={[
@@ -94,3 +97,4 @@ export default function App() {
     </BrowserRouter>
   )
 }
+

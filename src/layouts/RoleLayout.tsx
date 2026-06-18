@@ -17,10 +17,11 @@ export function RoleLayout({ role, navItems }: { role: 'admin' | 'lecturer' | 's
       }
 
       supabase.from('profiles').select('*').eq('id', user.id).single().then(({ data }) => {
-        if (!data || (data.role !== role && data.role !== 'admin')) {
+        const typedData = data as any;
+        if (!typedData || (typedData.role !== role && typedData.role !== 'admin')) {
           navigate('/login')
         } else {
-          setProfile(data)
+          setProfile(typedData)
           setAuthorized(true)
         }
         setLoading(false)

@@ -49,14 +49,15 @@ export default function HistoryPage() {
 
     const stats: CourseStats[] = []
 
-    for (const enrollment of enrollments || []) {
+    for (const enrollmentAny of enrollments || []) {
+      const enrollment = enrollmentAny as any;
       const { count: totalSessions } = await supabase
         .from('attendance_sessions')
         .select('*', { count: 'exact', head: true })
         .eq('course_id', enrollment.course_id)
 
       const myAttendance = attendanceData?.filter(
-        (r) => r.attendance_sessions?.courses?.id === enrollment.course_id
+        (r: any) => r.attendance_sessions?.courses?.id === enrollment.course_id
       ).length || 0
 
       stats.push({
@@ -74,61 +75,60 @@ export default function HistoryPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-white mb-6">Attendance History</h1>
+      <h1 className="text-2xl font-bold font-display text-white mb-6">Attendance History</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         {courseStats.map((stat) => (
-          <div key={stat.course_id} className="bg-[#0f1f3a] rounded-xl p-5 border border-[#1e3a5f]">
-            <h3 className="text-white font-medium">{stat.course_name}</h3>
-            <div className="flex items-center justify-between mt-3">
-              <div><p className="text-gray-400 text-sm">{stat.attended} / {stat.total_sessions} sessions</p></div>
-              <div className={`text-2xl font-bold ${stat.percentage >= 75 ? 'text-green-400' : stat.percentage >= 50 ? 'text-[#c9a227]' : 'text-red-400'}`}>
+          <div key={stat.course_id} className="ksas-card">
+            <h3 className="text-white font-medium mb-1">{stat.course_name}</h3>
+            <p className="text-[#8ba0c4] text-xs font-mono">{stat.course_id.split('-')[0]}</p>
+            <div className="flex items-center justify-between mt-4">
+              <div><p className="text-[#8ba0c4] text-sm">{stat.attended} / {stat.total_sessions} sessions</p></div>
+              <div className={`text-2xl font-bold ${stat.percentage >= 75 ? 'text-[#22c55e]' : stat.percentage >= 50 ? 'text-[#c9a227]' : 'text-[#ef4444]'}`}>
                 {stat.percentage}%
               </div>
             </div>
-            <div className="h-2 bg-[#162a4d] rounded-full mt-3 overflow-hidden">
-              <div className={`h-full rounded-full ${stat.percentage >= 75 ? 'bg-green-400' : stat.percentage >= 50 ? 'bg-[#c9a227]' : 'bg-red-400'}`}
+            <div className="h-1.5 bg-[#162444] rounded-full mt-3 overflow-hidden">
+              <div className={`h-full rounded-full ${stat.percentage >= 75 ? 'bg-[#22c55e]' : stat.percentage >= 50 ? 'bg-[#c9a227]' : 'bg-[#ef4444]'}`}
                 style={{ width: `${stat.percentage}%` }} />
             </div>
           </div>
         ))}
       </div>
 
-      <h2 className="text-lg font-semibold text-white mb-4">Recent Records</h2>
-      <div className="bg-[#0f1f3a] rounded-xl border border-[#1e3a5f] overflow-hidden">
+      <h2 className="text-lg font-semibold font-display text-white mb-4">Recent Records</h2>
+      <div className="ksas-card !p-0 overflow-hidden">
         {loading ? (
-          <div className="animate-pulse p-6 space-y-3">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-12 bg-[#162a4d] rounded-lg" />
-            ))}
-          </div>
+          <div className="p-6 text-center text-[#8ba0c4]">Loading history...</div>
         ) : records.length === 0 ? (
-          <div className="p-8 text-center text-gray-400">No attendance records yet.</div>
+          <div className="p-8 text-center text-[#8ba0c4]">No attendance records yet.</div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          <div className="ksas-table-container">
+            <table className="ksas-table">
               <thead>
-                <tr className="text-left text-gray-400 border-b border-[#1e3a5f]">
-                  <th className="pb-3 px-4 pt-4">Course</th>
-                  <th className="pb-3 px-4 pt-4">Session</th>
-                  <th className="pb-3 px-4 pt-4">Status</th>
-                  <th className="pb-3 px-4 pt-4">Time</th>
+                <tr>
+                  <th>Course</th>
+                  <th>Session</th>
+                  <th>Status</th>
+                  <th>Time</th>
                 </tr>
               </thead>
               <tbody>
-                {records.map((record) => (
-                  <tr key={record.id} className="border-b border-[#1e3a5f]/50">
-                    <td className="py-3 px-4">
+                {records.map((record: any) => (
+                  <tr key={record.id}>
+                    <td>
                       <div>
-                        <p className="text-white">{record.attendance_sessions?.courses?.course_name}</p>
-                        <p className="text-[#c9a227] font-mono text-sm">{record.attendance_sessions?.courses?.course_code}</p>
+                        <p className="text-white font-medium">{record.attendance_sessions?.courses?.course_name}</p>
+                        <p className="text-[#c9a227] font-mono text-xs mt-0.5">{record.attendance_sessions?.courses?.course_code}</p>
                       </div>
                     </td>
-                    <td className="py-3 px-4 text-[#c9a227] font-mono">{record.attendance_sessions?.session_code}</td>
-                    <td className="py-3 px-4">
-                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-300">{record.status}</span>
+                    <td className="text-[#c9a227] font-mono">{record.attendance_sessions?.session_code}</td>
+                    <td>
+                      <span className={`badge ${
+                        record.status === 'Present' ? 'badge-success' : record.status === 'Absent' ? 'badge-error' : 'badge-warning'
+                      }`}>{record.status}</span>
                     </td>
-                    <td className="py-3 px-4 text-gray-300 text-sm">{new Date(record.attendance_time).toLocaleString()}</td>
+                    <td className="text-[#8ba0c4] text-sm">{new Date(record.attendance_time).toLocaleString()}</td>
                   </tr>
                 ))}
               </tbody>

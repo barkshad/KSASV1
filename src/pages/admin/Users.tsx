@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
+import { Plus, Search, Edit2, Trash2, X, Loader2 } from 'lucide-react'
 
 type Profile = {
   id: string
@@ -10,6 +11,8 @@ type Profile = {
   created_at: string
 }
 
+import Papa from 'papaparse'
+
 export default function UsersPage() {
   const [users, setUsers] = useState<Profile[]>([])
   const [loading, setLoading] = useState(true)
@@ -17,11 +20,19 @@ export default function UsersPage() {
   const [roleFilter, setRoleFilter] = useState('all')
   const [currentPage, setCurrentPage] = useState(1)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingUser, setEditingUser] = useState<Profile | null>(null)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [userToDelete, setUserToDelete] = useState<Profile | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
+  
   const itemsPerPage = 10
 
   useEffect(() => { fetchUsers() }, [])
 
   const fetchUsers = async () => {
+    setLoading(true)
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
@@ -37,6 +48,58 @@ export default function UsersPage() {
     const { error } = await supabase.from('profiles').update({ status: newStatus }).eq('id', id)
     if (error) { showToast('Failed to update status', 'error') }
     else { showToast(`User ${newStatus === 'active' ? 'activated' : 'deactivated'}`, 'success'); fetchUsers() }
+  }
+
+  const handleCsvUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setIsUploading(true)
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: async (results) => {
+        try {
+          const res = await fetch('/api/admin/users/bulk', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ users: results.data })
+          })
+          const data = await res.json()
+          if (!res.ok) throw new Error(data.error || 'Upload failed')
+          
+          if (data.errors?.length > 0) {
+            showToast(`Imported ${data.successCount}. Failed: ${data.errors.length}`, 'error')
+          } else {
+            showToast(`Successfully imported ${data.successCount} users`, 'success')
+          }
+          fetchUsers()
+        } catch (err: any) {
+          showToast(err.message, 'error')
+        } finally {
+          setIsUploading(false)
+          e.target.value = ''
+        }
+      },
+      error: (error) => {
+        showToast(error.message, 'error')
+        setIsUploading(false)
+        e.target.value = ''
+      }
+    })
+  }
+
+  const deleteUser = async () => {
+    if (!userToDelete) return
+    try {
+      const res = await fetch(`/api/admin/users/${userToDelete.id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('Failed to delete')
+      showToast('User deleted successfully', 'success')
+      setIsDeleteModalOpen(false)
+      fetchUsers()
+    } catch (e: any) {
+      showToast(e.message, 'error')
+    }
   }
 
   const showToast = (message: string, type: 'success' | 'error') => {
@@ -56,27 +119,45 @@ export default function UsersPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-white mb-6">User Management</h1>
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-2xl font-bold font-display text-white">Users</h1>
+          <p className="text-sm text-[#8ba0c4]">Manage students, lecturers, and admins.</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <label className="btn-secondary cursor-pointer relative overflow-hidden">
+             {isUploading ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : null}
+             {isUploading ? 'Uploading...' : 'Bulk Import CSV'}
+             <input type="file" accept=".csv" onChange={handleCsvUpload} disabled={isUploading} className="absolute inset-0 opacity-0 cursor-pointer" />
+          </label>
+          <button className="btn-primary flex items-center gap-2" onClick={() => { setEditingUser(null); setIsModalOpen(true); }}>
+            <Plus size={16} /> New User
+          </button>
+        </div>
+      </div>
 
       {toast && (
-        <div className={`fixed top-4 right-4 px-6 py-3 rounded-lg z-50 ${toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'} text-white`}>
+        <div className={`fixed top-4 right-4 px-6 py-3 rounded-lg z-50 shadow-lg border ${toast.type === 'success' ? 'bg-[#0f1f3d] border-[#22c55e] text-[#22c55e]' : 'bg-[#0f1f3d] border-[#ef4444] text-[#ef4444]'}`}>
           {toast.message}
         </div>
       )}
 
-      <div className="bg-[#0f1f3a] rounded-xl p-6 border border-[#1e3a5f]">
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <input
-            type="text"
-            placeholder="Search by name or email..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="flex-1 bg-[#162a4d] border border-[#1e3a5f] text-white rounded-lg px-4 py-2"
-          />
+      <div className="ksas-card mb-6">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8ba0c4]" size={18} />
+            <input
+              type="text"
+              placeholder="Search by name or email..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-10"
+            />
+          </div>
           <select
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
-            className="bg-[#162a4d] border border-[#1e3a5f] text-white rounded-lg px-4 py-2"
+            className="w-full sm:w-48"
           >
             <option value="all">All Roles</option>
             <option value="admin">Admin</option>
@@ -84,76 +165,234 @@ export default function UsersPage() {
             <option value="student">Student</option>
           </select>
         </div>
+      </div>
 
-        {loading ? (
-          <div className="animate-pulse space-y-3">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-12 bg-[#162a4d] rounded-lg" />
-            ))}
-          </div>
-        ) : (
-          <>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="text-left text-gray-400 border-b border-[#1e3a5f]">
-                    <th className="pb-3 px-4">Name</th>
-                    <th className="pb-3 px-4">Email</th>
-                    <th className="pb-3 px-4">Role</th>
-                    <th className="pb-3 px-4">Status</th>
-                    <th className="pb-3 px-4">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedUsers.map((user) => (
-                    <tr key={user.id} className="border-b border-[#1e3a5f]/50 hover:bg-[#162a4d]/50">
-                      <td className="py-3 px-4 text-white">{user.name}</td>
-                      <td className="py-3 px-4 text-gray-300">{user.email}</td>
-                      <td className="py-3 px-4">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          user.role === 'admin' ? 'bg-red-500/20 text-red-300' :
-                          user.role === 'lecturer' ? 'bg-blue-500/20 text-blue-300' :
-                          'bg-green-500/20 text-green-300'
-                        }`}>{user.role}</span>
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          user.status === 'active' ? 'bg-green-500/20 text-green-300' : 'bg-gray-500/20 text-gray-300'
-                        }`}>{user.status}</span>
-                      </td>
-                      <td className="py-3 px-4">
+      <div className="ksas-card overflow-hidden !p-0">
+        <div className="ksas-table-container">
+          <table className="ksas-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr><td colSpan={5} className="text-center py-8 text-[#8ba0c4]">Loading users...</td></tr>
+              ) : paginatedUsers.length === 0 ? (
+                <tr><td colSpan={5} className="text-center py-8 text-[#8ba0c4]">No users found.</td></tr>
+              ) : (
+                paginatedUsers.map((user) => (
+                  <tr key={user.id}>
+                    <td className="font-medium text-white">{user.name}</td>
+                    <td className="text-[#8ba0c4]">{user.email}</td>
+                    <td>
+                      <span className={`badge ${
+                        user.role === 'admin' ? 'badge-admin' :
+                        user.role === 'lecturer' ? 'badge-lecturer' :
+                        'badge-student'
+                      }`}>{user.role.charAt(0).toUpperCase() + user.role.slice(1)}</span>
+                    </td>
+                    <td>
+                      <span className={`badge ${
+                        user.status === 'active' ? 'badge-success' : 'badge-error'
+                      }`}>{user.status.charAt(0).toUpperCase() + user.status.slice(1)}</span>
+                    </td>
+                    <td>
+                      <div className="flex items-center gap-2">
                         <button
                           onClick={() => toggleStatus(user.id, user.status)}
-                          className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-                            user.status === 'active'
-                              ? 'bg-red-500/20 text-red-300 hover:bg-red-500/30'
-                              : 'bg-green-500/20 text-green-300 hover:bg-green-500/30'
-                          }`}
+                          className="text-xs text-[#8ba0c4] hover:text-white px-2 py-1 rounded border border-[#1e3358] hover:border-[#8ba0c4] transition-colors"
                         >
-                          {user.status === 'active' ? 'Deactivate' : 'Activate'}
+                          {user.status === 'active' ? 'Suspend' : 'Activate'}
                         </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                        <button onClick={() => { setEditingUser(user); setIsModalOpen(true); }} className="p-1.5 text-[#8ba0c4] hover:text-[#c9a227] hover:bg-[#162444] rounded transition-colors">
+                          <Edit2 size={16} />
+                        </button>
+                        <button onClick={() => { setUserToDelete(user); setIsDeleteModalOpen(true); }} className="p-1.5 text-[#8ba0c4] hover:text-[#ef4444] hover:bg-[#162444] rounded transition-colors">
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-            {totalPages > 1 && (
-              <div className="flex justify-center gap-2 mt-6">
-                {[...Array(totalPages)].map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setCurrentPage(i + 1)}
-                    className={`w-8 h-8 rounded-lg ${currentPage === i + 1 ? 'bg-[#c9a227] text-[#0a1628]' : 'bg-[#162a4d] text-white'}`}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
-              </div>
+      {totalPages > 1 && (
+        <div className="flex justify-center gap-2 mt-6">
+          {[...Array(totalPages)].map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrentPage(i + 1)}
+              className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${currentPage === i + 1 ? 'bg-[#c9a227] text-[#0a1628]' : 'bg-[#162444] text-white hover:bg-[#1e3358]'}`}
+            >
+              {i + 1}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <UserModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        user={editingUser}
+        onSuccess={() => { setIsModalOpen(false); fetchUsers(); }}
+      />
+
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 bg-[#0a1628]/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="ksas-card max-w-md w-full animate-in zoom-in-95">
+            <h3 className="text-xl font-bold text-white mb-2">Delete User?</h3>
+            <p className="text-[#8ba0c4] mb-6">Are you sure you want to delete {userToDelete?.name}? This action cannot be undone.</p>
+            <div className="flex justify-end gap-3 mt-6">
+              <button onClick={() => setIsDeleteModalOpen(false)} className="btn-secondary">Cancel</button>
+              <button onClick={deleteUser} className="btn-danger">Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function UserModal({ isOpen, onClose, user, onSuccess }: { isOpen: boolean, onClose: () => void, user: Profile | null, onSuccess: () => void }) {
+  const [formData, setFormData] = useState({
+    name: '', email: '', password: '', role: 'student',
+    studentNumber: '', course: '', year: '1', department: ''
+  })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (isOpen && user) {
+      setFormData(prev => ({ ...prev, name: user.name, email: user.email, role: user.role }))
+      // Load specific role data if editing. Simplified here for text limit, user can update them if altered.
+    } else if (isOpen && !user) {
+      setFormData({ name: '', email: '', password: '', role: 'student', studentNumber: '', course: '', year: '1', department: '' })
+    }
+  }, [isOpen, user])
+
+  if (!isOpen) return null
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+    
+    // Inline validation
+    if (!user && formData.password.length < 8) {
+      setError('Password must be at least 8 characters')
+      setLoading(false)
+      return
+    }
+
+    try {
+      const url = user ? `/api/admin/users/${user.id}` : '/api/admin/users'
+      const method = user ? 'PATCH' : 'POST'
+      
+      const payload: any = { ...formData }
+      if (user && !payload.password) delete payload.password // Don't send empty pass on edit
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Request failed')
+      
+      onSuccess()
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-[#0a1628]/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+      <div className="ksas-card max-w-md w-full animate-in zoom-in-95 my-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-bold font-display text-white">{user ? 'Edit User' : 'Add User'}</h2>
+          <button onClick={onClose} className="text-[#8ba0c4] hover:text-white"><X size={20} /></button>
+        </div>
+
+        {error && <div className="bg-red-900/20 border-l-4 border-[#ef4444] text-red-300 px-4 py-2 rounded mb-4 text-sm">{error}</div>}
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium text-[#f0f4ff]">Full Name</label>
+            <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required className="w-full" />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium text-[#f0f4ff]">Email address</label>
+            <input type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} required disabled={!!user} className="w-full disabled:opacity-50" />
+            {!user && formData.email && !formData.email.endsWith('@kabarak.ac.ke') && (
+               <p className="text-[#f59e0b] text-xs">Consider using an @kabarak.ac.ke email.</p>
             )}
-          </>
-        )}
+          </div>
+
+          <div className="space-y-1.5">
+             <label className="block text-sm font-medium text-[#f0f4ff]">{user ? 'New Password (Optional)' : 'Password'}</label>
+             <input type="text" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} required={!user} className="w-full" />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium text-[#f0f4ff]">Role</label>
+            <select value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})} required className="w-full">
+              <option value="student">Student</option>
+              <option value="lecturer">Lecturer</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+
+          {formData.role === 'student' && (
+            <>
+              <div className="space-y-1.5">
+                <label className="block text-sm font-medium text-[#f0f4ff]">Student Number</label>
+                <input type="text" value={formData.studentNumber} onChange={e => setFormData({...formData, studentNumber: e.target.value})} className="w-full" required />
+              </div>
+              <div className="flex gap-4">
+                <div className="space-y-1.5 flex-1">
+                  <label className="block text-sm font-medium text-[#f0f4ff]">Course</label>
+                  <input type="text" value={formData.course} onChange={e => setFormData({...formData, course: e.target.value})} className="w-full" required />
+                </div>
+                <div className="space-y-1.5 flex-1">
+                  <label className="block text-sm font-medium text-[#f0f4ff]">Year</label>
+                  <select value={formData.year} onChange={e => setFormData({...formData, year: e.target.value})} className="w-full" required>
+                    <option value="1">1st Year</option>
+                    <option value="2">2nd Year</option>
+                    <option value="3">3rd Year</option>
+                    <option value="4">4th Year</option>
+                  </select>
+                </div>
+              </div>
+            </>
+          )}
+
+          {formData.role === 'lecturer' && (
+             <div className="space-y-1.5">
+                <label className="block text-sm font-medium text-[#f0f4ff]">Department</label>
+                <input type="text" value={formData.department} onChange={e => setFormData({...formData, department: e.target.value})} className="w-full" required />
+             </div>
+          )}
+
+          <div className="flex justify-end gap-3 mt-6">
+            <button type="button" onClick={onClose} className="btn-secondary">Cancel</button>
+            <button type="submit" disabled={loading} className="btn-primary">
+              {loading ? <Loader2 className="animate-spin w-5 h-5" /> : 'Save User'}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   )
