@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
-import { Plus, Search, Edit2, Trash2, X, Loader2 } from 'lucide-react'
+import { Plus, Search, Edit2, Trash2, X, Loader2, Download } from 'lucide-react'
+import Papa from 'papaparse'
 
 type Profile = {
   id: string
@@ -10,8 +11,6 @@ type Profile = {
   status: string
   created_at: string
 }
-
-import Papa from 'papaparse'
 
 export default function UsersPage() {
   const [users, setUsers] = useState<Profile[]>([])
@@ -118,26 +117,26 @@ export default function UsersPage() {
   const paginatedUsers = filteredUsers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
+    <div className="max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold font-display text-white">Users</h1>
-          <p className="text-sm text-[#8ba0c4]">Manage students, lecturers, and admins.</p>
+          <h1 className="text-3xl font-bold font-display text-[#111] tracking-tight">Directory</h1>
+          <p className="text-sm text-[#666] mt-1">Manage system accounts across all roles.</p>
         </div>
         <div className="flex items-center gap-3">
-          <label className="btn-secondary cursor-pointer relative overflow-hidden">
-             {isUploading ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : null}
-             {isUploading ? 'Uploading...' : 'Bulk Import CSV'}
+          <label className="btn-secondary cursor-pointer relative overflow-hidden group">
+             {isUploading ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : <Download className="w-4 h-4 mr-2 group-hover:text-[#111]" />}
+             {isUploading ? 'Uploading...' : 'Import CSV'}
              <input type="file" accept=".csv" onChange={handleCsvUpload} disabled={isUploading} className="absolute inset-0 opacity-0 cursor-pointer" />
           </label>
-          <button className="btn-primary flex items-center gap-2" onClick={() => { setEditingUser(null); setIsModalOpen(true); }}>
+          <button className="btn-primary flex items-center gap-2 bg-[#111] text-white" onClick={() => { setEditingUser(null); setIsModalOpen(true); }}>
             <Plus size={16} /> New User
           </button>
         </div>
       </div>
 
       {toast && (
-        <div className={`fixed top-4 right-4 px-6 py-3 rounded-lg z-50 shadow-lg border ${toast.type === 'success' ? 'bg-[#0f1f3d] border-[#22c55e] text-[#22c55e]' : 'bg-[#0f1f3d] border-[#ef4444] text-[#ef4444]'}`}>
+        <div className={`fixed bottom-4 right-4 px-6 py-3 rounded-lg z-50 shadow-lg border text-sm font-medium animate-in slide-in-from-bottom-4 ${toast.type === 'success' ? 'bg-white border-green-200 text-green-700' : 'bg-white border-red-200 text-red-700'}`}>
           {toast.message}
         </div>
       )}
@@ -145,7 +144,7 @@ export default function UsersPage() {
       <div className="ksas-card mb-6">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8ba0c4]" size={18} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#999]" size={18} />
             <input
               type="text"
               placeholder="Search by name or email..."
@@ -157,38 +156,39 @@ export default function UsersPage() {
           <select
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
-            className="w-full sm:w-48"
+            className="w-full sm:w-48 appearance-none bg-white"
           >
             <option value="all">All Roles</option>
-            <option value="admin">Admin</option>
+            <option value="admin">Administrator</option>
             <option value="lecturer">Lecturer</option>
             <option value="student">Student</option>
           </select>
         </div>
       </div>
 
-      <div className="ksas-card overflow-hidden !p-0">
+      <div className="ksas-card overflow-hidden !p-0 border-[#e5e5e5] shadow-sm">
         <div className="ksas-table-container">
           <table className="ksas-table">
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Email</th>
+                <th>User Details</th>
                 <th>Role</th>
                 <th>Status</th>
-                <th>Actions</th>
+                <th className="text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={5} className="text-center py-8 text-[#8ba0c4]">Loading users...</td></tr>
+                <tr><td colSpan={4} className="text-center py-12 text-[#666]">Loading directory...</td></tr>
               ) : paginatedUsers.length === 0 ? (
-                <tr><td colSpan={5} className="text-center py-8 text-[#8ba0c4]">No users found.</td></tr>
+                <tr><td colSpan={4} className="text-center py-12 text-[#666]">No records found.</td></tr>
               ) : (
                 paginatedUsers.map((user) => (
-                  <tr key={user.id}>
-                    <td className="font-medium text-white">{user.name}</td>
-                    <td className="text-[#8ba0c4]">{user.email}</td>
+                  <tr key={user.id} className="group">
+                    <td>
+                      <div className="font-medium text-[#111]">{user.name}</div>
+                      <div className="text-sm text-[#666] mt-0.5">{user.email}</div>
+                    </td>
                     <td>
                       <span className={`badge ${
                         user.role === 'admin' ? 'badge-admin' :
@@ -201,19 +201,19 @@ export default function UsersPage() {
                         user.status === 'active' ? 'badge-success' : 'badge-error'
                       }`}>{user.status.charAt(0).toUpperCase() + user.status.slice(1)}</span>
                     </td>
-                    <td>
-                      <div className="flex items-center gap-2">
+                    <td className="text-right">
+                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
                           onClick={() => toggleStatus(user.id, user.status)}
-                          className="text-xs text-[#8ba0c4] hover:text-white px-2 py-1 rounded border border-[#1e3358] hover:border-[#8ba0c4] transition-colors"
+                          className="text-xs text-[#666] hover:text-[#111] px-2.5 py-1.5 rounded border border-[#e5e5e5] hover:border-[#111] transition-colors font-medium bg-white"
                         >
                           {user.status === 'active' ? 'Suspend' : 'Activate'}
                         </button>
-                        <button onClick={() => { setEditingUser(user); setIsModalOpen(true); }} className="p-1.5 text-[#8ba0c4] hover:text-[#c9a227] hover:bg-[#162444] rounded transition-colors">
-                          <Edit2 size={16} />
+                        <button onClick={() => { setEditingUser(user); setIsModalOpen(true); }} className="w-8 h-8 flex items-center justify-center text-[#666] hover:text-[#111] hover:bg-[#f3f3f3] rounded border border-transparent hover:border-[#e5e5e5] transition-all">
+                          <Edit2 size={15} />
                         </button>
-                        <button onClick={() => { setUserToDelete(user); setIsDeleteModalOpen(true); }} className="p-1.5 text-[#8ba0c4] hover:text-[#ef4444] hover:bg-[#162444] rounded transition-colors">
-                          <Trash2 size={16} />
+                        <button onClick={() => { setUserToDelete(user); setIsDeleteModalOpen(true); }} className="w-8 h-8 flex items-center justify-center text-[#666] hover:text-[#dc2626] hover:bg-[#fef2f2] rounded border border-transparent hover:border-[#fee2e2] transition-all">
+                          <Trash2 size={15} />
                         </button>
                       </div>
                     </td>
@@ -231,7 +231,7 @@ export default function UsersPage() {
             <button
               key={i}
               onClick={() => setCurrentPage(i + 1)}
-              className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${currentPage === i + 1 ? 'bg-[#c9a227] text-[#0a1628]' : 'bg-[#162444] text-white hover:bg-[#1e3358]'}`}
+              className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${currentPage === i + 1 ? 'bg-[#111] text-white shadow-sm' : 'bg-transparent border border-[#e5e5e5] text-[#666] hover:bg-[#f3f3f3] hover:text-[#111]'}`}
             >
               {i + 1}
             </button>
@@ -247,13 +247,13 @@ export default function UsersPage() {
       />
 
       {isDeleteModalOpen && (
-        <div className="fixed inset-0 bg-[#0a1628]/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="ksas-card max-w-md w-full animate-in zoom-in-95">
-            <h3 className="text-xl font-bold text-white mb-2">Delete User?</h3>
-            <p className="text-[#8ba0c4] mb-6">Are you sure you want to delete {userToDelete?.name}? This action cannot be undone.</p>
+        <div className="fixed inset-0 bg-[#111]/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="ksas-card max-w-sm w-full animate-in zoom-in-95 shadow-xl">
+            <h3 className="text-xl font-bold text-[#111] tracking-tight mb-2">Confirm Deletion</h3>
+            <p className="text-[#666] text-sm mb-6 leading-relaxed">Are you sure you want to permanently delete <strong className="text-[#111] font-medium">{userToDelete?.name}</strong>? This action cannot be reversed.</p>
             <div className="flex justify-end gap-3 mt-6">
               <button onClick={() => setIsDeleteModalOpen(false)} className="btn-secondary">Cancel</button>
-              <button onClick={deleteUser} className="btn-danger">Delete</button>
+              <button onClick={deleteUser} className="btn-danger">Delete User</button>
             </div>
           </div>
         </div>
@@ -273,7 +273,6 @@ function UserModal({ isOpen, onClose, user, onSuccess }: { isOpen: boolean, onCl
   useEffect(() => {
     if (isOpen && user) {
       setFormData(prev => ({ ...prev, name: user.name, email: user.email, role: user.role }))
-      // Load specific role data if editing. Simplified here for text limit, user can update them if altered.
     } else if (isOpen && !user) {
       setFormData({ name: '', email: '', password: '', role: 'student', studentNumber: '', course: '', year: '1', department: '' })
     }
@@ -318,57 +317,57 @@ function UserModal({ isOpen, onClose, user, onSuccess }: { isOpen: boolean, onCl
   }
 
   return (
-    <div className="fixed inset-0 bg-[#0a1628]/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="ksas-card max-w-md w-full animate-in zoom-in-95 my-auto">
+    <div className="fixed inset-0 bg-[#111]/20 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+      <div className="ksas-card max-w-md w-full animate-in zoom-in-95 shadow-xl my-auto">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold font-display text-white">{user ? 'Edit User' : 'Add User'}</h2>
-          <button onClick={onClose} className="text-[#8ba0c4] hover:text-white"><X size={20} /></button>
+          <h2 className="text-xl font-bold font-display text-[#111] tracking-tight">{user ? 'Edit Details' : 'Add Profile'}</h2>
+          <button onClick={onClose} className="p-2 text-[#999] hover:text-[#111] hover:bg-[#f3f3f3] rounded-md transition-colors"><X size={18} /></button>
         </div>
 
-        {error && <div className="bg-red-900/20 border-l-4 border-[#ef4444] text-red-300 px-4 py-2 rounded mb-4 text-sm">{error}</div>}
+        {error && <div className="bg-[#fef2f2] border border-[#fee2e2] text-[#dc2626] px-4 py-2.5 rounded-lg mb-6 text-sm">{error}</div>}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-[#f0f4ff]">Full Name</label>
+            <label className="block text-sm font-medium text-[#111]">Full Name</label>
             <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required className="w-full" />
           </div>
 
           <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-[#f0f4ff]">Email address</label>
-            <input type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} required disabled={!!user} className="w-full disabled:opacity-50" />
+            <label className="block text-sm font-medium text-[#111]">Email Address</label>
+            <input type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} required disabled={!!user} className="w-full disabled:opacity-50 disabled:bg-[#f8f8f8]" />
             {!user && formData.email && !formData.email.endsWith('@kabarak.ac.ke') && (
                <p className="text-[#f59e0b] text-xs">Consider using an @kabarak.ac.ke email.</p>
             )}
           </div>
 
           <div className="space-y-1.5">
-             <label className="block text-sm font-medium text-[#f0f4ff]">{user ? 'New Password (Optional)' : 'Password'}</label>
+             <label className="block text-sm font-medium text-[#111]">{user ? 'New Password (Optional)' : 'Password'}</label>
              <input type="text" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} required={!user} className="w-full" />
           </div>
 
           <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-[#f0f4ff]">Role</label>
-            <select value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})} required className="w-full">
+            <label className="block text-sm font-medium text-[#111]">Account Role</label>
+            <select value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})} required className="w-full appearance-none">
               <option value="student">Student</option>
               <option value="lecturer">Lecturer</option>
-              <option value="admin">Admin</option>
+              <option value="admin">Administrator</option>
             </select>
           </div>
 
           {formData.role === 'student' && (
             <>
               <div className="space-y-1.5">
-                <label className="block text-sm font-medium text-[#f0f4ff]">Student Number</label>
+                <label className="block text-sm font-medium text-[#111]">Registration Number</label>
                 <input type="text" value={formData.studentNumber} onChange={e => setFormData({...formData, studentNumber: e.target.value})} className="w-full" required />
               </div>
               <div className="flex gap-4">
                 <div className="space-y-1.5 flex-1">
-                  <label className="block text-sm font-medium text-[#f0f4ff]">Course</label>
+                  <label className="block text-sm font-medium text-[#111]">Course Code</label>
                   <input type="text" value={formData.course} onChange={e => setFormData({...formData, course: e.target.value})} className="w-full" required />
                 </div>
-                <div className="space-y-1.5 flex-1">
-                  <label className="block text-sm font-medium text-[#f0f4ff]">Year</label>
-                  <select value={formData.year} onChange={e => setFormData({...formData, year: e.target.value})} className="w-full" required>
+                <div className="space-y-1.5 flex-[0.7]">
+                  <label className="block text-sm font-medium text-[#111]">Year</label>
+                  <select value={formData.year} onChange={e => setFormData({...formData, year: e.target.value})} className="w-full appearance-none" required>
                     <option value="1">1st Year</option>
                     <option value="2">2nd Year</option>
                     <option value="3">3rd Year</option>
@@ -381,15 +380,15 @@ function UserModal({ isOpen, onClose, user, onSuccess }: { isOpen: boolean, onCl
 
           {formData.role === 'lecturer' && (
              <div className="space-y-1.5">
-                <label className="block text-sm font-medium text-[#f0f4ff]">Department</label>
+                <label className="block text-sm font-medium text-[#111]">Department</label>
                 <input type="text" value={formData.department} onChange={e => setFormData({...formData, department: e.target.value})} className="w-full" required />
              </div>
           )}
 
-          <div className="flex justify-end gap-3 mt-6">
+          <div className="flex justify-end gap-3 mt-8 border-t border-[#e5e5e5] pt-5">
             <button type="button" onClick={onClose} className="btn-secondary">Cancel</button>
-            <button type="submit" disabled={loading} className="btn-primary">
-              {loading ? <Loader2 className="animate-spin w-5 h-5" /> : 'Save User'}
+            <button type="submit" disabled={loading} className="btn-primary bg-[#111] text-white">
+              {loading ? <Loader2 className="animate-spin w-5 h-5 mx-6" /> : 'Save Profile'}
             </button>
           </div>
         </form>
@@ -397,3 +396,4 @@ function UserModal({ isOpen, onClose, user, onSuccess }: { isOpen: boolean, onCl
     </div>
   )
 }
+

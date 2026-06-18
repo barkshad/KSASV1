@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useSearchParams, Link } from 'react-router-dom'
+import { Plus, Eye, QrCode } from 'lucide-react'
 
 type Course = { id: string; course_code: string; course_name: string }
 type Session = {
@@ -83,16 +84,19 @@ export default function SessionsPage() {
   }
 
   return (
-    <div>
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-        <h1 className="text-2xl font-bold text-white">Attendance Sessions</h1>
-        <div className="flex gap-3">
+    <div className="max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-8">
+        <div>
+          <h1 className="text-3xl font-bold font-display text-[#111] tracking-tight">Active Sessions</h1>
+          <p className="text-[#666] text-sm mt-1">Manage and launch classes for attendance logging.</p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
           <select
             value={selectedCourse}
             onChange={(e) => setSelectedCourse(e.target.value)}
-            className="bg-[#162a4d] border border-[#1e3a5f] text-white rounded-lg px-4 py-2"
+            className="bg-white border border-[#e5e5e5] text-[#111] rounded-lg px-4 py-2 appearance-none min-w-[200px]"
           >
-            <option value="">Select Course</option>
+            <option value="">-- View All Assigned Courses --</option>
             {courses.map((c) => (
                <option key={c.id} value={c.id}>{c.course_code} - {c.course_name}</option>
             ))}
@@ -100,53 +104,62 @@ export default function SessionsPage() {
           <button
             onClick={createSession}
             disabled={!selectedCourse}
-            className="bg-[#c9a227] hover:bg-[#d4b43a] text-[#0a1628] font-semibold px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+            className="btn-primary bg-[#111] text-white disabled:opacity-50 flex items-center justify-center gap-2"
           >
-            + New Session
+            <Plus size={16} /> New Session
           </button>
         </div>
       </div>
 
-      <div className="bg-[#0f1f3a] rounded-xl border border-[#1e3a5f] overflow-hidden">
+      <div className="ksas-card overflow-hidden !p-0 shadow-sm border-[#e5e5e5]">
         {loading ? (
           <div className="animate-pulse p-6 space-y-3">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-12 bg-[#162a4d] rounded-lg" />
+              <div key={i} className="h-12 bg-[#f3f3f3] rounded-lg" />
             ))}
           </div>
         ) : sessions.length === 0 ? (
-          <div className="p-8 text-center text-gray-400">
-            No sessions yet. Select a course and create one.
+          <div className="p-12 text-center text-[#666]">
+            No attendance sessions created yet. Select a course and launch a new session to begin.
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          <div className="ksas-table-container">
+            <table className="ksas-table">
               <thead>
-                <tr className="text-left text-gray-400 border-b border-[#1e3a5f]">
-                  <th className="pb-3 px-4 pt-4">Code</th>
-                  <th className="pb-3 px-4 pt-4">Course</th>
-                  <th className="pb-3 px-4 pt-4">Status</th>
-                  <th className="pb-3 px-4 pt-4">Started</th>
-                  <th className="pb-3 px-4 pt-4">Actions</th>
+                <tr>
+                  <th>Session Code</th>
+                  <th>Course Segment</th>
+                  <th>Status</th>
+                  <th>Time Logged</th>
+                  <th className="text-right">Monitoring</th>
                 </tr>
               </thead>
               <tbody>
                 {sessions.map((session) => (
-                  <tr key={session.id} className="border-b border-[#1e3a5f]/50 hover:bg-[#162a4d]/50">
-                    <td className="py-3 px-4 text-[#c9a227] font-mono font-bold">{session.session_code}</td>
-                    <td className="py-3 px-4 text-white">{session.courses?.course_name}</td>
-                    <td className="py-3 px-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        session.status === 'active' ? 'bg-green-500/20 text-green-300' : 'bg-gray-500/20 text-gray-300'
-                      }`}>{session.status}</span>
+                  <tr key={session.id} className="group border-b border-[#e5e5e5] last:border-0 hover:bg-[#f8f8f8]">
+                    <td className="font-mono text-[#111] font-semibold text-sm bg-[#f3f3f3] px-2 py-1 rounded w-max inline-block my-3">
+                      {session.session_code}
                     </td>
-                    <td className="py-3 px-4 text-gray-300 text-sm">
-                      {new Date(session.start_time).toLocaleString()}
+                    <td>
+                      <div className="font-medium text-[#111]">{session.courses?.course_name}</div>
+                      <div className="text-xs text-[#666] font-mono mt-0.5">{session.courses?.course_code}</div>
                     </td>
-                    <td className="py-3 px-4">
-                      <div className="flex gap-2">
-                        <Link to={`/lecturer/sessions/${session.id}`} className="text-[#c9a227] hover:text-[#d4b43a] text-sm font-medium">Live View</Link>
-                        <Link to={`/lecturer/sessions/${session.id}?view=qr`} className="text-blue-400 hover:text-blue-300 text-sm">QR Code</Link>
+                    <td>
+                      <span className={`badge ${
+                        session.status === 'active' ? 'bg-[#f0fdf4] text-green-700 border-green-200' : 'bg-[#f3f3f3] text-[#666] border-[#e5e5e5]'
+                      }`}>{session.status.charAt(0).toUpperCase() + session.status.slice(1)}</span>
+                    </td>
+                    <td className="text-[#666] text-sm">
+                      {new Date(session.start_time).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
+                    </td>
+                    <td className="text-right">
+                      <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Link to={`/lecturer/sessions/${session.id}`} className="flex items-center gap-1.5 text-xs font-medium text-[#666] hover:text-[#111] transition-colors border border-transparent hover:bg-white hover:border-[#e5e5e5] px-2.5 py-1.5 rounded-md shadow-sm">
+                          <Eye size={14} /> Live View
+                        </Link>
+                        <Link to={`/lecturer/sessions/${session.id}?view=qr`} className="flex items-center gap-1.5 text-xs font-medium text-[#666] hover:text-[#111] transition-colors border border-transparent hover:bg-white hover:border-[#e5e5e5] px-2.5 py-1.5 rounded-md shadow-sm">
+                          <QrCode size={14} /> Display QR
+                        </Link>
                       </div>
                     </td>
                   </tr>
@@ -159,3 +172,4 @@ export default function SessionsPage() {
     </div>
   )
 }
+

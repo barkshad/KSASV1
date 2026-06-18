@@ -4,7 +4,9 @@
  */
 
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import Landing from './pages/Landing'
 import Login from './pages/Login'
+import AdminLogin from './pages/AdminLogin'
 import SignUp from './pages/SignUp'
 import { RoleLayout } from './layouts/RoleLayout'
 
@@ -43,13 +45,13 @@ function HomeRedirect() {
     })
   }, [])
 
-  if (loading) return <div className="min-h-screen bg-navy-900 flex items-center justify-center p-8"><div className="w-8 h-8 border-2 border-[#c9a227] border-t-transparent rounded-full animate-spin" /></div>
+  if (loading) return <div className="min-h-screen bg-white flex items-center justify-center p-8"><div className="w-8 h-8 border-2 border-black border-t-transparent rounded-full animate-spin" /></div>
   
   if (role === 'admin') return <Navigate to="/admin" />
   if (role === 'lecturer') return <Navigate to="/lecturer" />
   if (role === 'student') return <Navigate to="/student" />
   
-  return <Navigate to="/login" />
+  return <Landing />
 }
 
 export default function App() {
@@ -58,6 +60,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<HomeRedirect />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/sign-up" element={<SignUp />} />
 
         {/* Admin Routes */}

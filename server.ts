@@ -234,6 +234,46 @@ async function startServer() {
     }
   })
 
+  // Admin seed initialization on startup
+  async function seedDefaultAdmin() {
+    try {
+      const email = 'admin@kabarak.ac.ke'
+      const password = '12345678'
+      
+      const { error: authError } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+      })
+
+      if (authError && authError.message !== 'User already registered') {
+        console.error('Failed to create default admin auth user:', authError.message)
+        return
+      }
+
+      // If user exists, we get it by email to update profile
+      const { data: usersData } = await supabaseAdmin.auth.admin.listUsers()
+      const user = usersData?.users.find(u => u.email === email)
+      
+      if (user) {
+        // Upsert profile
+        await supabaseAdmin.from('profiles').upsert({
+           id: user.id,
+           email,
+           name: 'System Administrator',
+           role: 'admin',
+           status: 'active'
+        })
+        console.log('Default admin check complete. Admin is ready.')
+      }
+    } catch (e: any) {
+      console.error('Error seeding default admin:', e)
+    }
+  }
+
+  // Run seed
+  seedDefaultAdmin()
+
   // Start Vite Middleware
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({

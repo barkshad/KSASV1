@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useSearchParams, useNavigate } from 'react-router-dom'
+import { CheckCircle2, AlertCircle, Camera, Hash } from 'lucide-react'
 
 export default function AttendPage() {
   const [sessionCode, setSessionCode] = useState('')
@@ -55,7 +56,7 @@ export default function AttendPage() {
           setMessage({ text: 'You have already marked attendance for this session!', type: 'error' })
         } else { throw insertError }
       } else {
-        setMessage({ text: 'Attendance marked successfully!', type: 'success' })
+        setMessage({ text: 'Presence registered successfully.', type: 'success' })
         setTimeout(() => navigate('/student/history'), 2000)
       }
     } catch (err: any) {
@@ -76,10 +77,10 @@ export default function AttendPage() {
         .eq('status', 'active')
         .single()
 
-      if (!session) throw new Error('Invalid or expired session code')
+      if (!session) throw new Error('Invalid or expired access code')
       await markAttendance(session.id)
     } catch (err: any) {
-      setMessage({ text: err.message || 'Failed to mark attendance', type: 'error' })
+      setMessage({ text: err.message || 'Failed to authorize access', type: 'error' })
     } finally {
       setLoading(false)
     }
@@ -87,48 +88,67 @@ export default function AttendPage() {
 
   const startQRScan = () => {
     setScanning(true)
-    setMessage({ text: 'Camera QR scanning requires a QR scanner library. Please use manual code entry for now.', type: 'error' })
+    setMessage({ text: 'Camera interface not detected. Please use manual code entry for now.', type: 'error' })
     setScanning(false)
   }
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-white mb-6">Mark Attendance</h1>
+    <div className="max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="mb-10 text-center">
+        <h1 className="text-3xl font-display font-semibold text-[#111] tracking-tight">Log Attendance</h1>
+        <p className="text-[#666] mt-2">Submit your presence for an active lecture session.</p>
+      </div>
 
       {message && (
-        <div className={`mb-6 px-4 py-3 rounded-lg ${message.type === 'success' ? 'bg-green-600/20 border border-green-500/50 text-green-300' : 'bg-red-600/20 border border-red-500/50 text-red-300'}`}>
-          {message.text}
+        <div className={`mb-8 p-4 rounded-xl flex items-start gap-3 border ${message.type === 'success' ? 'bg-[#f0fdf4] border-[#bbf7d0] text-green-800' : 'bg-red-50 border-red-200 text-red-800'}`}>
+          {message.type === 'success' ? <CheckCircle2 className="shrink-0 mt-0.5 text-green-600" size={18} /> : <AlertCircle className="shrink-0 mt-0.5 text-red-600" size={18} />}
+          <p className="font-medium text-sm">{message.text}</p>
         </div>
       )}
 
       {loading && (
-        <div className="mb-6 text-center">
-          <div className="inline-block w-8 h-8 border-2 border-[#c9a227] border-t-transparent rounded-full animate-spin" />
-          <p className="text-gray-400 mt-2">Processing...</p>
+        <div className="mb-8 p-6 text-center bg-white border border-[#e5e5e5] rounded-xl shadow-sm">
+          <div className="inline-block w-6 h-6 border-2 border-[#111] border-t-transparent rounded-full animate-spin" />
+          <p className="text-[#666] text-sm font-medium mt-3">Verifying credentials and logging record...</p>
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-[#0f1f3a] rounded-xl p-6 border border-[#1e3a5f]">
-          <h2 className="text-lg font-semibold text-white mb-4">Scan QR Code</h2>
-          <p className="text-gray-400 text-sm mb-4">Use your device camera to scan the QR code displayed by your lecturer.</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="ksas-card overflow-hidden group">
+          <div className="w-12 h-12 bg-[#f3f3f3] rounded-2xl flex items-center justify-center mb-6 text-[#111] group-hover:scale-110 transition-transform duration-500">
+            <Camera size={24} />
+          </div>
+          <h2 className="text-xl font-display font-semibold text-[#111] mb-2">QR Scan</h2>
+          <p className="text-[#666] text-sm mb-8 leading-relaxed">
+            Use your device camera to rapidly scan the QR code displayed by the instructor on the presentation screen.
+          </p>
           <button onClick={startQRScan} disabled={scanning || loading}
-            className="w-full bg-[#c9a227] hover:bg-[#d4b43a] text-[#0a1628] font-semibold py-3 rounded-lg transition-colors disabled:opacity-50">
-            {scanning ? 'Scanning...' : 'Start Camera Scan'}
+            className="w-full btn-primary bg-[#111] text-white disabled:opacity-50 justify-center">
+            {scanning ? 'Initializing...' : 'Launch Camera'}
           </button>
-          {scanning && <p className="text-gray-400 text-sm mt-3 text-center">Point camera at the QR code...</p>}
         </div>
 
-        <div className="bg-[#0f1f3a] rounded-xl p-6 border border-[#1e3a5f]">
-          <h2 className="text-lg font-semibold text-white mb-4">Enter Session Code</h2>
-          <p className="text-gray-400 text-sm mb-4">Type the 6-character code shown on screen.</p>
-          <form onSubmit={handleManualCode}>
-            <input type="text" value={sessionCode} onChange={(e) => setSessionCode(e.target.value.toUpperCase())}
-              maxLength={6} placeholder="ABC123"
-              className="w-full bg-[#162a4d] border border-[#1e3a5f] text-white rounded-lg px-4 py-3 text-center text-xl tracking-widest font-mono mb-4 focus:outline-none focus:ring-2 focus:ring-[#c9a227]" />
+        <div className="ksas-card overflow-hidden">
+          <div className="w-12 h-12 bg-[#f3f3f3] rounded-2xl flex items-center justify-center mb-6 text-[#111]">
+            <Hash size={24} />
+          </div>
+          <h2 className="text-xl font-display font-semibold text-[#111] mb-2">Access Code</h2>
+          <p className="text-[#666] text-sm mb-8 leading-relaxed">Enter the 6-character alpha-numeric code provided by the instructor.</p>
+          
+          <form onSubmit={handleManualCode} className="space-y-4">
+            <div>
+              <input 
+                type="text" 
+                value={sessionCode} 
+                onChange={(e) => setSessionCode(e.target.value.toUpperCase())}
+                maxLength={6} 
+                placeholder="000000"
+                className="w-full bg-[#f8f8f8] border border-[#e5e5e5] text-[#111] rounded-xl px-4 py-4 text-center text-3xl tracking-[0.25em] font-mono font-bold focus:outline-none focus:border-[#111] focus:bg-white transition-colors" 
+              />
+            </div>
             <button type="submit" disabled={loading || sessionCode.length < 6}
-              className="w-full bg-[#162a4d] hover:bg-[#1e3a5f] text-white font-semibold py-3 rounded-lg transition-colors disabled:opacity-50">
-              {loading ? 'Submitting...' : 'Submit Code'}
+              className="w-full btn-secondary justify-center disabled:opacity-50">
+              {loading ? 'Authenticating...' : 'Submit Entry'}
             </button>
           </form>
         </div>
@@ -136,3 +156,4 @@ export default function AttendPage() {
     </div>
   )
 }
+

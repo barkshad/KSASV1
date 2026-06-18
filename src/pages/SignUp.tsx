@@ -36,10 +36,6 @@ export default function SignUpPage() {
       setLoading(false)
       return
     }
-    if (!email.endsWith('@kabarak.ac.ke')) {
-      // Allow but warn could be tricky, using error for simplicity, or just bypass for testing.
-      // But rules requested: "Email must match @kabarak.ac.ke or show warning" -> Let's just allow it for now
-    }
 
     try {
       const { data: { user }, error: authError } = await supabase.auth.signUp({
@@ -89,130 +85,150 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="min-h-screen flex w-full">
-      {/* Left panel */}
-      <div className="hidden lg:flex flex-col justify-center items-center w-[45%] bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+CjxyZWN0IHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgZmlsbD0idHJhbnNwYXJlbnQiPjwvcmVjdD4KPHBhdGggZD0iTTAgNDBMIQwgMEwwIDQwWiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMWUzMzU4IiBzdHJva2Utb3BhY2l0eT0iMC4yIiBzdHJva2Utd2lkdGg9IjEiPjwvcGF0aD4KPC9zdmc+')] bg-[#0a1628] relative px-12 text-center border-r border-[#1e3358]">
-        <div className="w-20 h-20 rounded-full border-2 border-[#c9a227] flex items-center justify-center mb-6">
-          <span className="font-display text-[#c9a227] text-3xl font-bold">K</span>
-        </div>
-        <h1 className="font-display text-4xl text-[#f0f4ff] font-bold mb-4 leading-tight">
-          Kabarak Smart<br/>Attendance System
-        </h1>
-        <p className="text-[#8ba0c4] text-[15px] mb-12">Precision attendance for every lecture.</p>
+    <div className="min-h-screen flex animate-in fade-in duration-500 bg-white">
+      {/* Left panel - Branding */}
+      <div className="hidden lg:flex flex-col justify-between w-[45%] bg-[#111] p-12 relative overflow-hidden text-white">
+        {/* Subtle background pattern */}
+        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\\"40\\" height=\\"40\\" viewBox=\\"0 0 40 40\\" xmlns=\\"http://www.w3.org/2000/svg\\"%3E%3Cpath d=\\"M0 0h40v40H0V0zm20 20h20v20H20V20zM0 20h20v20H0V20z\\" fill=\\"%23ffffff\\" fill-rule=\\"evenodd\\"%3E%3C/path%3E%3C/svg%3E")' }}></div>
         
-        <div className="flex flex-col gap-4 items-center">
-          <div className="border border-[#1e3358] rounded-full px-4 py-1.5 text-[12px] text-[#8ba0c4] flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-[#c9a227]"></div>
-            Fraud-proof QR codes
+        <div className="relative z-10 flex items-center gap-3">
+           <div className="w-10 h-10 bg-white text-[#111] font-display font-bold flex items-center justify-center text-xl rounded">
+            K
           </div>
-          <div className="border border-[#1e3358] rounded-full px-4 py-1.5 text-[12px] text-[#8ba0c4] flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-[#c9a227]"></div>
-            Real-time tracking
-          </div>
-          <div className="border border-[#1e3358] rounded-full px-4 py-1.5 text-[12px] text-[#8ba0c4] flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-[#c9a227]"></div>
-            Instant CSV export
-          </div>
+          <span className="font-display font-semibold tracking-tight text-white text-xl">Kabarak UMS</span>
         </div>
 
-        <div className="absolute bottom-8 text-[#4d6285] text-[11px]">
-          Powered by Kabarak University
+        <div className="relative z-10 max-w-md">
+           <h1 className="text-4xl font-display font-bold leading-[1.1] tracking-tight mb-6">
+            Join the new era of University Management.
+          </h1>
+          <p className="text-gray-400 text-lg leading-relaxed">
+            Create an account to track your academic progress, log attendance, and manage your university profile seamlessly.
+          </p>
+
+          <div className="mt-12 space-y-5">
+             <div className="flex items-center gap-4 text-gray-300">
+                <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-sm">1</div>
+                <p>Register with your university details.</p>
+             </div>
+             <div className="flex items-center gap-4 text-gray-300">
+                <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-sm">2</div>
+                <p>Access your personalized portal instantly.</p>
+             </div>
+          </div>
+        </div>
+        
+        <div className="relative z-10 text-sm text-gray-500 flex justify-between w-full">
+           <span>Standard User Registration</span>
+           <span>v2.0.0</span>
         </div>
       </div>
 
-      {/* Right panel */}
-      <div className="w-full lg:w-[55%] flex items-center justify-center bg-[#0a1628] px-6 py-12 overflow-y-auto">
-        <div className="w-full max-w-[440px]">
-          <div className="mb-8">
-            <h2 className="text-2xl font-semibold text-[#f0f4ff] mb-2">Create your account</h2>
-            <p className="text-[#8ba0c4] text-sm">Join the Kabarak Smart Attendance System</p>
+      {/* Right panel - Form */}
+      <div className="w-full lg:w-[55%] flex flex-col justify-center items-center p-8 bg-white overflow-y-auto">
+        <div className="w-full max-w-[440px] py-12">
+          
+          <div className="lg:hidden flex items-center gap-3 mb-10">
+            <div className="w-10 h-10 bg-[#111] text-white font-display font-bold flex items-center justify-center text-xl rounded">
+              K
+            </div>
+            <span className="font-display font-bold tracking-tight text-[#111] text-2xl">Kabarak UMS</span>
+          </div>
+
+          <div className="mb-10 text-left">
+            <h2 className="text-[28px] font-display font-bold text-[#111] tracking-tight mb-2">Create an account</h2>
+            <p className="text-[#666]">Enter your details below to get started</p>
           </div>
 
           {error && (
-            <div className="bg-red-900/20 border-l-4 border-[#ef4444] text-red-300 px-4 py-3 rounded-lg mb-6 text-sm animate-in fade-in slide-in-from-top-4">
+            <div className="mb-6 p-4 bg-[#fff1f2] border border-[#fecdd3] text-[#be123c] rounded-lg text-sm font-medium">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSignUp} className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-[#f0f4ff]">Full Name</label>
-              <input type="text" value={name} onChange={(e) => setName(e.target.value)} required className="w-full" placeholder="John Doe" />
+          <form onSubmit={handleSignUp} className="space-y-5">
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-[#111]">Full Name</label>
+              <input type="text" value={name} onChange={(e) => setName(e.target.value)} required className="ksas-input" placeholder="e.g. Jane Doe" />
             </div>
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-[#f0f4ff]">Email address</label>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full" placeholder="your@kabarak.ac.ke" />
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-[#111]">Email Address</label>
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="ksas-input" placeholder="your@kabarak.ac.ke" />
               {email && !email.endsWith('@kabarak.ac.ke') && (
-                <p className="text-[#f59e0b] text-xs">Warning: It is recommended to use your @kabarak.ac.ke email.</p>
+                <p className="text-[#f59e0b] text-xs font-semibold">Note: Official @kabarak.ac.ke email is recommended.</p>
               )}
             </div>
 
-            <div className="space-y-1.5 relative">
-              <label className="block text-sm font-medium text-[#f0f4ff]">Password</label>
-              <div className="relative">
-                <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full pr-10" placeholder="Min 8 chars, 1 number" />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8ba0c4] hover:text-[#f0f4ff]">
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-[#111]">Password</label>
+                <div className="relative">
+                  <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required className="ksas-input pr-10" placeholder="Min 8 chars" />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#666] hover:text-[#111] transition-colors">
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-[#111]">Confirm Password</label>
+                <div className="relative">
+                  <input type={showConfirmPassword ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required className="ksas-input pr-10" />
+                  <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#666] hover:text-[#111] transition-colors">
+                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
               </div>
             </div>
 
-            <div className="space-y-1.5 relative">
-              <label className="block text-sm font-medium text-[#f0f4ff]">Confirm Password</label>
-              <div className="relative">
-                <input type={showConfirmPassword ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required className="w-full pr-10" />
-                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8ba0c4] hover:text-[#f0f4ff]">
-                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-[#f0f4ff]">Role</label>
-              <select value={role} onChange={(e) => setRole(e.target.value)} required className="w-full">
-                <option value="student">Student</option>
-                <option value="lecturer">Lecturer</option>
+            <div className="space-y-2 mt-4 pt-4 border-t border-[#e5e5e5]">
+              <label className="block text-sm font-semibold text-[#111]">Account Type (Role)</label>
+              <select value={role} onChange={(e) => setRole(e.target.value)} required className="ksas-input bg-white cursor-pointer">
+                <option value="student">Student Profile</option>
+                <option value="lecturer">Lecturer Profile</option>
               </select>
             </div>
 
             {role === 'student' && (
-              <>
-                <div className="space-y-1.5">
-                  <label className="block text-sm font-medium text-[#f0f4ff]">Student Number</label>
-                  <input type="text" value={studentNumber} onChange={(e) => setStudentNumber(e.target.value)} required className="w-full" placeholder="KAB/XX/XXXXX" />
+              <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-[#111]">Student Number</label>
+                  <input type="text" value={studentNumber} onChange={(e) => setStudentNumber(e.target.value)} required className="ksas-input font-mono" placeholder="KAB/XX/XXXXX" />
                 </div>
-                <div className="space-y-1.5">
-                  <label className="block text-sm font-medium text-[#f0f4ff]">Course</label>
-                  <input type="text" value={course} onChange={(e) => setCourse(e.target.value)} required className="w-full" placeholder="e.g. BSc Computer Science" />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-[#111]">Course</label>
+                    <input type="text" value={course} onChange={(e) => setCourse(e.target.value)} required className="ksas-input" placeholder="e.g. BSc Comp Sci" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-[#111]">Year of Study</label>
+                    <select value={year} onChange={(e) => setYear(e.target.value)} required className="ksas-input bg-white cursor-pointer">
+                      <option>1st Year</option>
+                      <option>2nd Year</option>
+                      <option>3rd Year</option>
+                      <option>4th Year</option>
+                    </select>
+                  </div>
                 </div>
-                <div className="space-y-1.5">
-                  <label className="block text-sm font-medium text-[#f0f4ff]">Year of Study</label>
-                  <select value={year} onChange={(e) => setYear(e.target.value)} required className="w-full">
-                    <option>1st Year</option>
-                    <option>2nd Year</option>
-                    <option>3rd Year</option>
-                    <option>4th Year</option>
-                  </select>
-                </div>
-              </>
-            )}
-
-            {role === 'lecturer' && (
-              <div className="space-y-1.5">
-                <label className="block text-sm font-medium text-[#f0f4ff]">Department</label>
-                <input type="text" value={department} onChange={(e) => setDepartment(e.target.value)} required className="w-full" placeholder="e.g. Computer Science" />
               </div>
             )}
 
-            <button type="submit" disabled={loading} className="btn-primary w-full mt-4">
-              {loading ? <Loader2 className="animate-spin w-5 h-5 mx-auto" /> : 'Create account'}
+            {role === 'lecturer' && (
+              <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                <label className="block text-sm font-semibold text-[#111]">Department</label>
+                <input type="text" value={department} onChange={(e) => setDepartment(e.target.value)} required className="ksas-input" placeholder="e.g. Computer Science" />
+              </div>
+            )}
+
+            <button type="submit" disabled={loading} className="btn-primary w-full h-11 bg-[#111] text-white mt-6">
+              {loading ? <Loader2 className="animate-spin" size={20} /> : 'Create Account'}
             </button>
           </form>
 
-          <div className="mt-6 text-center">
-            <Link to="/login" className="text-[#8ba0c4] text-sm hover:text-[#f0f4ff]">
-              Already have an account? <span className="text-[#f0c84a]">Sign in</span>
+          <div className="mt-8 text-center">
+            <Link to="/login" className="text-sm text-[#666] hover:text-[#111] transition-colors font-medium">
+              Already have an account? <span className="underline decoration-[#e5e5e5] underline-offset-4">Sign in</span>
             </Link>
           </div>
         </div>
@@ -220,3 +236,4 @@ export default function SignUpPage() {
     </div>
   )
 }
+

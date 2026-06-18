@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { Eye, EyeOff, Loader2, ArrowLeft } from 'lucide-react'
+import { Eye, EyeOff, Loader2, ArrowLeft, ShieldCheck } from 'lucide-react'
 
-export default function LoginPage() {
+export default function AdminLogin() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -32,15 +32,11 @@ export default function LoginPage() {
           .single()
 
         if (profile?.role === 'admin') {
-          // Reject admin login
-          await supabase.auth.signOut()
-          setError('Administrators must use the Admin Portal to sign in.')
-        } else if (profile?.role === 'lecturer') {
-          navigate('/lecturer')
-        } else if (profile?.role === 'student') {
-          navigate('/student')
+          navigate('/admin')
         } else {
-          setError('User role not found. Contact administration.')
+          // Explicitly reject non-admins
+          await supabase.auth.signOut()
+          setError('Access denied. Administrator privileges required.')
         }
       }
     } catch (err: any) {
@@ -52,37 +48,17 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex w-full bg-[#f8f8f8]">
-      {/* Left panel */}
-      <div className="hidden lg:flex flex-col justify-center items-center w-[45%] bg-[#111111] relative px-12 text-center text-white">
-        <div className="w-16 h-16 bg-white text-[#111111] rounded-2xl flex items-center justify-center mb-8 shadow-sm">
-          <span className="font-display text-2xl font-bold">U</span>
-        </div>
-        <h1 className="font-display text-4xl font-semibold mb-4 leading-tight">
-          University<br/>Management System
-        </h1>
-        <p className="text-[#a0a0a0] text-[15px] mb-12">Academic excellence starts here.</p>
-        
-        <div className="flex flex-col gap-4 items-center">
-          <div className="border border-[#333] rounded-full px-4 py-1.5 text-[13px] text-[#ccc] flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-white"></div>
-            Access Grades & Courses
-          </div>
-          <div className="border border-[#333] rounded-full px-4 py-1.5 text-[13px] text-[#ccc] flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-white"></div>
-            Class Notifications
-          </div>
-        </div>
-      </div>
-
-      {/* Right panel */}
-      <div className="w-full lg:w-[55%] flex items-center justify-center bg-white px-6 py-12 relative">
+      <div className="w-full flex items-center justify-center bg-white px-6 py-12 relative flex-col">
         <Link to="/" className="absolute top-8 left-8 flex items-center text-[#666] hover:text-[#111] text-sm font-medium transition-colors">
-          <ArrowLeft size={16} className="mr-1" /> Back
+          <ArrowLeft size={16} className="mr-1" /> Back to Portals
         </Link>
         <div className="w-full max-w-[400px]">
-          <div className="mb-10">
-            <h2 className="text-3xl font-semibold text-[#111] mb-2 font-display tracking-tight">Sign In</h2>
-            <p className="text-[#666] text-sm">Enter your credentials to access your portal.</p>
+          <div className="mb-10 text-center">
+            <div className="w-16 h-16 bg-[#f8f8f8] rounded-2xl flex items-center justify-center mb-6 mx-auto">
+              <ShieldCheck className="w-8 h-8 text-[#111]" />
+            </div>
+            <h2 className="text-3xl font-semibold text-[#111] mb-2 font-display tracking-tight">Admin Services</h2>
+            <p className="text-[#666] text-sm">Sign in to manage the university platform.</p>
           </div>
 
           {error && (
@@ -93,21 +69,20 @@ export default function LoginPage() {
 
           <form onSubmit={handleLogin} className="space-y-5">
             <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-[#111]">Email Address</label>
+              <label className="block text-sm font-medium text-[#111]">Admin Email</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 className="w-full"
-                placeholder="your@kabarak.ac.ke"
+                placeholder="admin@kabarak.ac.ke"
               />
             </div>
 
             <div className="space-y-1.5 relative">
               <div className="flex justify-between items-center">
                 <label className="block text-sm font-medium text-[#111]">Password</label>
-                <a href="#" className="text-[#666] text-[13px] hover:text-[#111] transition-colors">Forgot?</a>
               </div>
               <div className="relative">
                 <input
@@ -131,9 +106,9 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="btn-primary w-full mt-2"
+              className="btn-primary w-full mt-4 bg-[#111] text-white"
             >
-              {loading ? <Loader2 className="animate-spin w-5 h-5 mx-auto" /> : 'Sign In'}
+              {loading ? <Loader2 className="animate-spin w-5 h-5 mx-auto" /> : 'Authenticate'}
             </button>
           </form>
         </div>
@@ -141,4 +116,3 @@ export default function LoginPage() {
     </div>
   )
 }
-

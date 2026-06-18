@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
 import { QRCodeSVG } from 'qrcode.react'
 import { useParams, useSearchParams } from 'react-router-dom'
+import { Download, MonitorX, QrCode } from 'lucide-react'
 
 type AttendanceRecord = {
   id: string
@@ -105,96 +106,125 @@ export default function LiveSessionPage() {
 
   if (view === 'qr') {
     return (
-      <div className="min-h-screen bg-[#0a1628] flex flex-col items-center justify-center p-8">
-        <div className="bg-white p-8 rounded-2xl">
-          <QRCodeSVG value={session?.qr_payload || ''} size={400} level="H" includeMargin />
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center p-8">
+        <div className="mb-12 text-center space-y-2">
+          <h1 className="text-5xl font-display font-bold text-[#111] tracking-tight">{session?.courses?.course_name}</h1>
+          <p className="text-2xl text-[#666] font-mono">{session?.courses?.course_code}</p>
         </div>
-        <p className="text-[#c9a227] text-2xl font-bold mt-6">{session?.session_code}</p>
-        <p className="text-white text-lg mt-2">{session?.courses?.course_name}</p>
-        <p className="text-gray-400 text-sm mt-4">Scan to mark attendance</p>
+        
+        <div className="bg-white p-12 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-[#e5e5e5]">
+          <QRCodeSVG value={session?.qr_payload || ''} size={480} level="H" includeMargin={false} fgColor="#111111" />
+        </div>
+        
+        <div className="mt-12 text-center space-y-4">
+          <p className="text-[#666] text-xl font-medium tracking-wide pb-2">SESSION CODE</p>
+          <div className="inline-block px-10 py-4 bg-[#f8f8f8] border-2 border-[#111] rounded-2xl">
+            <p className="text-[#111] text-6xl font-mono font-bold tracking-[0.2em]">{session?.session_code}</p>
+          </div>
+          <p className="text-[#999] mt-6 max-w-sm mx-auto leading-relaxed">Scan the QR code with the student portal or enter the session code to log presence.</p>
+        </div>
       </div>
     )
   }
 
   return (
-    <div>
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+    <div className="max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 mb-8 pb-6 border-b border-[#e5e5e5]">
         <div>
-          <h1 className="text-2xl font-bold text-white">
-            {session?.courses?.course_code} - Live Session
-          </h1>
-          <p className="text-[#c9a227] font-mono text-lg mt-1">{session?.session_code}</p>
+          <div className="flex items-center gap-3 mb-2">
+            <span className="font-mono text-sm bg-[#111] text-white px-2.5 py-1 rounded-md font-semibold">{session?.courses?.course_code}</span>
+            <span className="font-mono text-sm border border-[#e5e5e5] text-[#111] bg-white px-2.5 py-1 rounded-md font-semibold">CODE: {session?.session_code}</span>
+          </div>
+          <h1 className="text-3xl font-display font-bold text-[#111] tracking-tight">Live Observation Room</h1>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           {session?.status === 'active' && (
             <button onClick={endSession}
-              className="bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded-lg transition-colors">
-              End Session
+              className="btn-danger flex items-center gap-2">
+              <MonitorX size={16} /> Close Session
             </button>
           )}
           <button onClick={downloadCSV}
-            className="bg-[#162a4d] hover:bg-[#1e3a5f] text-white px-4 py-2 rounded-lg transition-colors">
-            Download CSV
+            className="btn-secondary flex items-center gap-2">
+            <Download size={16} /> Export Logs
           </button>
           <a href={`/lecturer/sessions/${sessionId}?view=qr`} target="_blank" rel="noreferrer"
-            className="bg-[#c9a227] hover:bg-[#d4b43a] text-[#0a1628] font-semibold px-4 py-2 rounded-lg transition-colors">
-            Show QR
+            className="btn-primary bg-[#111] text-white flex items-center gap-2">
+            <QrCode size={16} /> Spotlight QR
           </a>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <div className="bg-[#0f1f3a] rounded-xl p-6 border border-[#1e3a5f]">
-          <p className="text-gray-400 text-sm">Present</p>
-          <p className="text-3xl font-bold text-green-400 mt-1">{records.length}</p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="ksas-card overflow-hidden relative">
+          <p className="text-[#666] text-xs font-medium uppercase tracking-wider mb-2">Present Today</p>
+          <p className="text-4xl font-display font-bold text-green-600">{records.length}</p>
+          <div className="absolute right-0 top-0 bottom-0 w-2 bg-green-500 rounded-r-xl opacity-20"></div>
         </div>
-        <div className="bg-[#0f1f3a] rounded-xl p-6 border border-[#1e3a5f]">
-          <p className="text-gray-400 text-sm">Enrolled</p>
-          <p className="text-3xl font-bold text-white mt-1">{enrolledCount}</p>
+        <div className="ksas-card overflow-hidden relative">
+          <p className="text-[#666] text-xs font-medium uppercase tracking-wider mb-2">Total Roster</p>
+          <p className="text-4xl font-display font-bold text-[#111]">{enrolledCount}</p>
         </div>
-        <div className="bg-[#0f1f3a] rounded-xl p-6 border border-[#1e3a5f]">
-          <p className="text-gray-400 text-sm">Attendance Rate</p>
-          <p className="text-3xl font-bold text-[#c9a227] mt-1">
+        <div className="ksas-card overflow-hidden relative">
+          <p className="text-[#666] text-xs font-medium uppercase tracking-wider mb-2">Current Turnout</p>
+          <p className="text-4xl font-display font-bold text-[#111]">
             {enrolledCount > 0 ? Math.round((records.length / enrolledCount) * 100) : 0}%
           </p>
         </div>
       </div>
 
-      <div className="bg-[#0f1f3a] rounded-xl border border-[#1e3a5f] overflow-hidden">
-        <h2 className="text-lg font-semibold text-white p-4 border-b border-[#1e3a5f]">Attendance Records</h2>
+      <div className="ksas-card !p-0 overflow-hidden border-[#e5e5e5] shadow-sm">
+        <div className="px-6 py-4 border-b border-[#e5e5e5] bg-[#f8f8f8] flex items-center justify-between">
+          <h2 className="text-[15px] font-semibold text-[#111] tracking-tight">Real-time Feed</h2>
+          {session?.status === 'active' && (
+             <div className="flex items-center gap-2">
+               <span className="relative flex h-2 w-2">
+                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                 <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+               </span>
+               <span className="text-xs font-medium text-green-700">Listening for signals...</span>
+             </div>
+          )}
+        </div>
+        
         {loading ? (
           <div className="animate-pulse p-6 space-y-3">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-12 bg-[#162a4d] rounded-lg" />
+              <div key={i} className="h-12 bg-[#f3f3f3] rounded-lg" />
             ))}
           </div>
         ) : records.length === 0 ? (
-          <div className="p-8 text-center text-gray-400">
-            No attendance yet. Students will appear here when they scan the QR code.
+          <div className="p-16 text-center text-[#666]">
+            <QrCode className="mx-auto h-12 w-12 text-[#ccc] mb-4" />
+            <p className="font-medium text-[#111] mb-1">Awaiting Initial Check-in</p>
+            <p className="text-sm">The roster will populate automatically as students submit their presence.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="text-left text-gray-400 border-b border-[#1e3a5f]">
-                  <th className="pb-3 px-4 pt-4">Student #</th>
-                  <th className="pb-3 px-4 pt-4">Name</th>
-                  <th className="pb-3 px-4 pt-4">Status</th>
-                  <th className="pb-3 px-4 pt-4">Time</th>
+          <div className="ksas-table-container">
+            <table className="ksas-table !border-0 text-sm">
+              <thead className="bg-white">
+                <tr>
+                  <th className="font-semibold text-[#111]">Student Identification</th>
+                  <th className="font-semibold text-[#111]">Status Flag</th>
+                  <th className="font-semibold text-[#111] text-right">Timestamp</th>
                 </tr>
               </thead>
               <tbody>
                 {records.map((record) => (
-                  <tr key={record.id} className="border-b border-[#1e3a5f]/50">
-                    <td className="py-3 px-4 text-[#c9a227] font-mono">{record.students?.student_number}</td>
-                    <td className="py-3 px-4 text-white">{record.students?.full_name}</td>
-                    <td className="py-3 px-4">
-                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-300">
-                        {record.status}
+                  <tr key={record.id} className="border-b border-[#f3f3f3] hover:bg-[#fafafa] transition-colors last:border-0">
+                    <td className="py-3">
+                      <div className="font-medium text-[#111]">{record.students?.full_name}</div>
+                      <div className="text-xs font-mono text-[#666] mt-0.5">{record.students?.student_number}</div>
+                    </td>
+                    <td className="py-3">
+                      <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-[#f0fdf4] text-green-700 border border-green-200 inline-block">
+                        {record.status.charAt(0).toUpperCase() + record.status.slice(1)}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-gray-300 text-sm">
-                      {new Date(record.attendance_time).toLocaleTimeString()}
+                    <td className="py-3 text-right">
+                       <span className="text-xs text-[#666] font-mono bg-[#f3f3f3] px-2 py-1 rounded">
+                         {new Date(record.attendance_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                       </span>
                     </td>
                   </tr>
                 ))}

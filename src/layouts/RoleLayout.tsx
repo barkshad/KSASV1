@@ -12,14 +12,14 @@ export function RoleLayout({ role, navItems }: { role: 'admin' | 'lecturer' | 's
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) {
-        navigate('/login')
+        navigate(role === 'admin' ? '/admin/login' : '/login')
         return
       }
 
       supabase.from('profiles').select('*').eq('id', user.id).single().then(({ data }) => {
         const typedData = data as any;
         if (!typedData || (typedData.role !== role && typedData.role !== 'admin')) {
-          navigate('/login')
+          navigate(role === 'admin' ? '/admin/login' : '/login')
         } else {
           setProfile(typedData)
           setAuthorized(true)
@@ -31,8 +31,8 @@ export function RoleLayout({ role, navItems }: { role: 'admin' | 'lecturer' | 's
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a1628] flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-[#c9a227] border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-[#f8f8f8] flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-black border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
@@ -40,11 +40,12 @@ export function RoleLayout({ role, navItems }: { role: 'admin' | 'lecturer' | 's
   if (!authorized) return null
 
   return (
-    <div className="flex min-h-screen bg-[#0a1628]">
+    <div className="flex min-h-screen bg-[#f8f8f8]">
       <Sidebar navItems={navItems} userName={profile?.name || role} userRole={profile?.role || role} />
-      <main className="flex-1 p-6 lg:p-8 overflow-auto">
+      <main className="flex-1 p-6 lg:p-8 overflow-auto max-w-7xl mx-auto w-full">
         <Outlet />
       </main>
     </div>
   )
 }
+

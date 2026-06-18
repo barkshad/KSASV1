@@ -74,61 +74,76 @@ export default function HistoryPage() {
   }
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold font-display text-white mb-6">Attendance History</h1>
+    <div className="max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="mb-8 pb-6 border-b border-[#e5e5e5]">
+        <h1 className="text-3xl font-display font-semibold text-[#111] tracking-tight">Academic Attendance</h1>
+        <p className="text-[#666] mt-1 text-sm">Review your presence history and calculated statistics per course.</p>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
         {courseStats.map((stat) => (
-          <div key={stat.course_id} className="ksas-card">
-            <h3 className="text-white font-medium mb-1">{stat.course_name}</h3>
-            <p className="text-[#8ba0c4] text-xs font-mono">{stat.course_id.split('-')[0]}</p>
-            <div className="flex items-center justify-between mt-4">
-              <div><p className="text-[#8ba0c4] text-sm">{stat.attended} / {stat.total_sessions} sessions</p></div>
-              <div className={`text-2xl font-bold ${stat.percentage >= 75 ? 'text-[#22c55e]' : stat.percentage >= 50 ? 'text-[#c9a227]' : 'text-[#ef4444]'}`}>
+          <div key={stat.course_id} className="ksas-card overflow-hidden relative">
+            <h3 className="text-[#111] font-semibold mb-1 line-clamp-1">{stat.course_name}</h3>
+            <p className="text-[#666] text-xs font-mono font-medium">{stat.course_id.split('-')[0]}</p>
+            <div className="flex items-center justify-between mt-6">
+              <div><p className="text-[#666] text-sm"><strong className="text-[#111]">{stat.attended}</strong> / {stat.total_sessions} logs</p></div>
+              <div className={`text-2xl font-display font-bold ${stat.percentage >= 75 ? 'text-green-600' : stat.percentage >= 50 ? 'text-[#f59e0b]' : 'text-red-500'}`}>
                 {stat.percentage}%
               </div>
             </div>
-            <div className="h-1.5 bg-[#162444] rounded-full mt-3 overflow-hidden">
-              <div className={`h-full rounded-full ${stat.percentage >= 75 ? 'bg-[#22c55e]' : stat.percentage >= 50 ? 'bg-[#c9a227]' : 'bg-[#ef4444]'}`}
+            <div className="h-1 bg-[#f3f3f3] rounded-full mt-4 overflow-hidden">
+              <div className={`h-full rounded-full transition-all duration-1000 ease-out ${stat.percentage >= 75 ? 'bg-green-500' : stat.percentage >= 50 ? 'bg-[#f59e0b]' : 'bg-red-500'}`}
                 style={{ width: `${stat.percentage}%` }} />
             </div>
           </div>
         ))}
       </div>
 
-      <h2 className="text-lg font-semibold font-display text-white mb-4">Recent Records</h2>
-      <div className="ksas-card !p-0 overflow-hidden">
+      <h2 className="text-xl font-display font-semibold text-[#111] mb-4">Historical Records</h2>
+      <div className="ksas-card !p-0 overflow-hidden shadow-sm border-[#e5e5e5]">
         {loading ? (
-          <div className="p-6 text-center text-[#8ba0c4]">Loading history...</div>
+          <div className="animate-pulse p-6 space-y-3">
+             <div className="h-10 bg-[#f3f3f3] rounded w-full"></div>
+             <div className="h-10 bg-[#f3f3f3] rounded w-full"></div>
+             <div className="h-10 bg-[#f3f3f3] rounded w-full"></div>
+          </div>
         ) : records.length === 0 ? (
-          <div className="p-8 text-center text-[#8ba0c4]">No attendance records yet.</div>
+          <div className="p-12 text-center text-[#666] border border-dashed border-[#e5e5e5] rounded-xl m-6">
+            No attendance records detected in your history.
+          </div>
         ) : (
           <div className="ksas-table-container">
-            <table className="ksas-table">
-              <thead>
+            <table className="ksas-table !border-0">
+              <thead className="bg-[#fafafa]">
                 <tr>
-                  <th>Course</th>
-                  <th>Session</th>
-                  <th>Status</th>
-                  <th>Time</th>
+                  <th className="font-semibold text-[#111]">Course Segment</th>
+                  <th className="font-semibold text-[#111]">Session Identity</th>
+                  <th className="font-semibold text-[#111]">Presence State</th>
+                  <th className="font-semibold text-[#111] text-right">Timestamp</th>
                 </tr>
               </thead>
               <tbody>
                 {records.map((record: any) => (
-                  <tr key={record.id}>
+                  <tr key={record.id} className="border-b border-[#f3f3f3] hover:bg-[#fafafa] transition-colors last:border-0">
                     <td>
                       <div>
-                        <p className="text-white font-medium">{record.attendance_sessions?.courses?.course_name}</p>
-                        <p className="text-[#c9a227] font-mono text-xs mt-0.5">{record.attendance_sessions?.courses?.course_code}</p>
+                        <p className="text-[#111] font-medium">{record.attendance_sessions?.courses?.course_name}</p>
+                        <p className="text-[#666] font-mono text-xs mt-0.5">{record.attendance_sessions?.courses?.course_code}</p>
                       </div>
                     </td>
-                    <td className="text-[#c9a227] font-mono">{record.attendance_sessions?.session_code}</td>
+                    <td>
+                       <span className="text-[#111] font-mono text-xs font-semibold bg-[#f3f3f3] px-2.5 py-1 rounded">
+                         {record.attendance_sessions?.session_code}
+                       </span>
+                    </td>
                     <td>
                       <span className={`badge ${
                         record.status === 'Present' ? 'badge-success' : record.status === 'Absent' ? 'badge-error' : 'badge-warning'
                       }`}>{record.status}</span>
                     </td>
-                    <td className="text-[#8ba0c4] text-sm">{new Date(record.attendance_time).toLocaleString()}</td>
+                    <td className="text-[#666] text-sm text-right font-medium">
+                       {new Date(record.attendance_time).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -139,3 +154,4 @@ export default function HistoryPage() {
     </div>
   )
 }
+
