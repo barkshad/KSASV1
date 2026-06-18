@@ -14,8 +14,8 @@ async function startServer() {
   // Seed admin
   app.get('/api/seed', async (req, res) => {
     try {
-      const email = 'kabarak.admin@kabarak.ac.ke'
-      const password = 'Admin123!'
+      const email = 'admin@kabarak.ac.ke'
+      const password = '12345678'
       
       const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
         email,
